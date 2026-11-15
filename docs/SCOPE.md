@@ -171,5 +171,5 @@ S1 过关至少要能演示：
 ## 11. 仓库与目录
 
 - 本地目录：`inventory-write-control/`（本工作区新建）
-- 远程仓：待 S0 确认后创建（账号 `weihuaguo270-ops`）
+- 远程仓：https://github.com/weihuaguo270-ops/inventory-write-control
 - 文档入口：`docs/SCOPE.md`（本文）
