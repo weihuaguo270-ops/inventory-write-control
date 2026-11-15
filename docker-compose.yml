@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: inv
+      POSTGRES_PASSWORD: inv
+      POSTGRES_DB: inventory
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inv -d inventory"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # 若本机 6379 已被占用，可改宿主机端口或直接复用已有 Redis（REDIS_ADDR）。
+  redis:
+    image: redis:7.4-alpine
+    profiles: ["full"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  rocketmq-namesrv:
+    profiles: ["mq"]
+    image: apache/rocketmq:5.3.1
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+
+  rocketmq-broker:
+    profiles: ["mq"]
+    image: apache/rocketmq:5.3.1
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: >
+      sh -c "
+      echo 'brokerIP1=127.0.0.1' > /home/rocketmq/rocketmq-5.3.1/conf/broker.conf &&
+      echo 'autoCreateTopicEnable=true' >> /home/rocketmq/rocketmq-5.3.1/conf/broker.conf &&
+      sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.3.1/conf/broker.conf
+      "
